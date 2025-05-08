@@ -27,6 +27,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/fetch-users', [ChatController::class, 'fetchUsers']);   
 	Route::post('/send-message', [ChatController::class, 'sendMessage']);
 	Route::get('/fetch-messages/{userId}', [ChatController::class, 'fetchMessages']);
+	Route::get('/search-user', [ChatController::class, 'searchUser']);
 });
 
 

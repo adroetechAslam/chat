@@ -17,6 +17,31 @@
             position: relative;
             overflow: auto;
         }
+      
+		#searchOutput {
+			/* position: absolute; */
+			background: #fff;
+			width: -webkit-fill-available;
+			max-height: 300px;
+			overflow-y: auto;
+			z-index: 1000;
+			margin-top: 1px;
+		}
+
+		#searchOutput.with-border {
+			border: 1px solid #c2b5b5 !important;
+			border-radius: 3px;
+		}
+
+        .search-item {
+            padding:5px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .search-item:hover {
+            background-color: #f1f1f1;
+        }
     </style>
 @endsection
 
@@ -68,20 +93,11 @@
             <div class="card custom-card">
                 <div class="main-content-app pt-0">
                     <div class="main-content-left main-content-left-chat">
-                        <ul class="nav nav-pills nav-style-3 border-bottom px-2 pt-2" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link active" data-bs-toggle="tab" role="tab" aria-current="page"
-                                    href="#recent-chat" aria-selected="true">Recent Chat</a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#groups"
-                                    aria-selected="false" tabindex="-1">Groups</a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#calls"
-                                    aria-selected="false" tabindex="-1">Calls</a>
-                            </li>
-                        </ul>
+                        <span class="nav-link active btn-block btn-danger py-1 ps-3 m-1">Recent Chat</span>
+                        <div class="p-1">
+                            <input type="text" id="searchUser" class="form-control" placeholder="Search user by name, email, phone" style="height: 30px !important;">
+                            <div id="searchOutput"></div>
+                        </div>
                         <div class="tab-content main-chat-list">
                             <div class="tab-pane p-0 border-0 active" id="recent-chat">
                                 <div class="chat-users-tab" id="chat-msg-scroll">
@@ -95,7 +111,8 @@
                                                 <div class="media-body">
                                                     <div class="media-contact-name flex-wrap">
                                                         <span>{{ $user->name }}</span>
-                                                        <span class="ps-2">{{ $user->last_time ? $user->last_time->diffForHumans() : '' }}
+                                                        <span
+                                                            class="ps-2">{{ $user->last_time ? $user->last_time->diffForHumans() : '' }}
                                                     </div>
                                                     <p>
                                                         <strong>
@@ -733,13 +750,14 @@
                         </div>
 
                         <div class="main-chat-footer">
-                            <input id="message" type="text" class="form-control" placeholder="Type your message here...">
+                            <input id="message" type="text" class="form-control"
+                                placeholder="Type your message here...">
                             <a class="main-msg-clip me-2 d-none" href="javascript:void(0);">
-								<i class="fe fe-paperclip"></i>
-							</a>
+                                <i class="fe fe-paperclip"></i>
+                            </a>
                             <a id="send" class="main-msg-send" href="javascript:void(0);">
-								<i class="fe fe-send"></i>
-							</a>
+                                <i class="fe fe-send"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -860,7 +878,7 @@
 @section('scripts')
     @vite('resources/assets/js/chat.js')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 
     <script>
         var currentUserId = null;
@@ -877,11 +895,8 @@
             fetchMessages(userId);
             fetchUserProfile(userId);
 
-			// Remove 'selected' class from all user list items
-			$('.main-chat-list .media').removeClass('selected');
-
-			// Add 'selected' class to the clicked user
-			$('.main-chat-list .media[data-id="' + userId + '"]').addClass('selected');
+            $('.main-chat-list .media').removeClass('selected');
+            $('.main-chat-list .media[data-id="' + userId + '"]').addClass('selected');
         }
 
         function fetchMessages(userId) {
@@ -895,13 +910,13 @@
 							<b class="text-center text-muted">No messages yet. Start the conversation!</b>
 						</div>
 					`);
-				}
+                }
 
-				$('#message').focus();
+                $('#message').focus();
 
-			}).fail(function(xhr) {
-				console.error('Error fetching messages:', xhr.responseText);
-			});
+            }).fail(function(xhr) {
+                console.error('Error fetching messages:', xhr.responseText);
+            });
         }
 
         $('#send').on('click', function() {
@@ -913,15 +928,15 @@
                 receiver_id: currentUserId,
                 content: message
             }, function(response) {
-                $('#message').val(''); // Clear input field
-                fetchMessages(currentUserId); // Refresh chat after sending
+                $('#message').val('');
+                fetchMessages(currentUserId);
             });
         });
 
         function fetchUserProfile(userId) {
             $.get(`/fetch-users`, function(users) {
                 const user = users.find(user => user.id === userId);
-				
+
                 //Middle part
                 $('.targrtUserName').text(user.name);
                 $('.targrtUserImage').attr('src', `/storage/${user.image}`);
@@ -941,17 +956,92 @@
             chatBox.scrollTop(chatBox[0].scrollHeight);
         }
 
-        setInterval(function() {
-            if (currentUserId !== null) {
-                fetchMessages(currentUserId);
-            }
-        }, 3000);
+        //Search user
+        $('#searchUser').on("keyup", function() {
+            var getName = $(this).val();
+            if (getName.length > 0) {
+                $.ajax({
+                    url: '{{ url('search-user') }}',
+                    method: 'GET',
+                    data: {
+                        name: getName
+                    },
+                    beforeSend: function() {
+                        $("#searchUser").css("background", "#FFF url('/loader.gif') no-repeat 165px");
+                    },
+                    success: function(response) {
+                        $("#searchOutput").empty().show();
 
-		$("#message").keypress(function (event) {
-            if (event.which === 13) {
-                event.preventDefault();
-                $("#send").click();
+                        if (response.length > 0) {
+                            $.each(response, function(index, customer) {
+                                var item = $('<div class="search-item"></div>')
+                                    .text(customer.name + ' | ' + customer.email)
+                                    .on('click', function() {
+                                        selectName(customer.id);
+                                    });
+
+                                $("#searchOutput").append(item);
+                            });
+							$("#searchOutput").addClass('with-border').show();
+
+                        } else {
+                            // $("#searchOutput").html('<p>No results found</p>');
+							$("#searchOutput").html('<p>No results found</p>').addClass('with-border').show();
+
+                        }
+
+                        $("#searchName").css("background", "#FFF");
+                    }
+                });
+            } else {
+                $("#searchOutput").hide();
             }
         });
+
+        function selectName(userId) {
+			$("#searchUser").val('');
+			$("#searchOutput").hide().removeClass('with-border');
+			loadMessages(userId);
+        }
+
+		// Refresh matter
+		let messageInterval = null;
+		function startMessageInterval() {
+			stopMessageInterval();
+			messageInterval = setInterval(function() {
+				if (currentUserId !== null) {
+					fetchMessages(currentUserId);
+				}
+			}, 3000);
+		}
+
+		function stopMessageInterval() {
+			if (messageInterval !== null) {
+				clearInterval(messageInterval);
+				messageInterval = null;
+			}
+		}
+
+		startMessageInterval();
+		$('#searchUser').on('focus keyup', function() {
+			if ($(this).val().trim().length > 0) {
+				stopMessageInterval();
+			} else {
+				startMessageInterval();
+			}
+		});
+
+		$('#searchUser').on('blur', function() {
+			if ($(this).val().trim().length === 0) {
+				startMessageInterval();
+			}
+		});
+
+        // $("#message").keypress(function(event) {
+        //     if (event.which === 13) {
+        //         event.preventDefault();
+        //         $("#send").click();
+        //     }
+        // });
     </script>
 @endsection

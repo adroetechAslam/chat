@@ -115,4 +115,18 @@ class ChatController extends Controller
 
 		return response()->json(['html' => $html]);
 	}
+
+	public function searchUser(Request $request)
+    {
+        $search = $request->get('name');
+		
+        $customers = User::where(function($query) use ($search) {
+			$query->where('name', 'LIKE', '%' . $search . '%')
+				  ->orWhere('email', 'LIKE', '%' . $search . '%');
+				//   ->orWhere('phone', 'LIKE', '%' . $search . '%');
+		})
+		->get(['id', 'name', 'email']);
+	
+        return response()->json($customers);
+    }
 }
