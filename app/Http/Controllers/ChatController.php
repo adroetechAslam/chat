@@ -49,20 +49,10 @@ class ChatController extends Controller
 		return view('pages.pages.chat', compact('users', 'lastUser'));
 	}
 
-	public function fetchUsers()
+	public function fetchUsers($userId)
 	{
-		$users = User::where('id', '!=', Auth::id())
-			->with(['lastMessage' => function ($query) {
-				$query->where(function ($query) {
-					$query->where('sender_id', Auth::id())
-						->orWhere('receiver_id', Auth::id());
-				})
-				->orderBy('created_at', 'desc')
-				->limit(1);
-			}])
-			->get();
-
-		return response()->json($users);
+		$user = User::where('id', $userId)->first();
+		return response()->json($user);
 	}
 
 	public function sendMessage(Request $request)

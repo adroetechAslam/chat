@@ -19,9 +19,11 @@
         }
       
 		#searchOutput {
-			/* position: absolute; */
+			position: absolute;
 			background: #fff;
-			width: -webkit-fill-available;
+			width: 99%;
+            /* left: 0; */
+            /* right: 0; */
 			max-height: 300px;
 			overflow-y: auto;
 			z-index: 1000;
@@ -771,7 +773,7 @@
                         <div class="card-body text-center">
                             <div class="user-lock text-center">
                                 <a href="#">
-                                    <img id="profile-image" alt="avatar" class="rounded-circle">
+                                    <img id="targrtUserImage" alt="avatar" class="rounded-circle">
                                 </a>
                             </div>
                             <a href="#">
@@ -934,15 +936,13 @@
         });
 
         function fetchUserProfile(userId) {
-            $.get(`/fetch-users`, function(users) {
-                const user = users.find(user => user.id === userId);
-
+            $.get(`/fetch-users/${userId}`, function(user) {
                 //Middle part
                 $('.targrtUserName').text(user.name);
                 $('.targrtUserImage').attr('src', `/storage/${user.image}`);
 
                 //Right part
-                $('#profile-image').attr('src', `/storage/${user.image}`);
+                $('#targrtUserImage').attr('src', `/storage/${user.image}`);
                 $('#profile-name').text(user.name);
                 $('#profile-type').text(user.type);
                 $('#profile-phone').text(user.phone_number);
